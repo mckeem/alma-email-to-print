@@ -1,0 +1,19 @@
+SHELL=/bin/bash
+
+# Designate the printer. Printer names match usernames so you don't have to manually change 60+ files.
+printer=`whoami`
+
+# Generate a unique ID
+f=`uuidgen`
+
+# Convert email, including headers and body into a HTML file and save off the images using MHONARC https://www.mhonarc.org/
+# Open file and search for the <!--X-Body-of-Message--> string using SED and collect all text to EOF.
+# Pipe the result into SED again to remove unwanted HTML tags added by MHONARC (horizontal rules)
+# Pipe result into HTML2PS to convert to PostScript
+# Pipe PostScript file to the designated printer
+:0E
+| mhonarc -single > ${f}.html; sed -n '/^<!--X-Body-of-Message-->$/ { s///; :a; n; p; ba; }' ${f}.html | sed -e '/<hr>/d' | html2ps | lp -d ${printer} -o media=a4 2>&1
+
+# Finally, delete the email.
+:0
+/dev/null
